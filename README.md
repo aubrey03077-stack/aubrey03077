@@ -6,6 +6,9 @@ price dashboard.
 
 ## Status: BLOCKED — network egress denied to all four target domains
 
+Re-checked 2026-10-13: still denied (curl → proxy CONNECT 403 on all four hosts; WebFetch → DNS
+resolution failure). No prices scraped and no dashboard published for this date.
+
 This session's outbound network policy rejects connections to every source required by the task:
 
 | Channel  | URL                                                        | Result |
@@ -35,9 +38,18 @@ One of the following, granted by whoever administers this environment's network 
   (`Precio al contado`, ARS), and 1P vs. 3P seller tag.
 - `data/price_history.jsonl` — one append-only record per product per day, the source of truth for
   trend charts and day-over-day (>10%) change detection.
-- `scripts/build_dashboard.py` — reads `data/price_history.jsonl` and renders `dashboard.html` with
-  the three required modules (cross-channel comparison, price history/trend, competitive landscape
-  & price-matching alerts).
+- `scripts/build_dashboard.py` — **built** (stdlib only, tested). Reads `data/price_history.jsonl` and
+  renders a self-contained `dashboard.html` with the three modules: cross-channel comparison (lowest
+  price per SKU highlighted, 1P/3P tag), per-SKU price trend chart, and competitive landscape &
+  alerts (day-over-day moves >10%, competitor SKUs within ±10% of each Xiaomi SKU per channel).
+  Run: `python3 scripts/build_dashboard.py`. Tests: `python3 -m unittest discover -s tests`.
+
+History record schema (one JSON object per line), which the scrapers must emit:
+
+```json
+{"date": "2026-10-13", "channel": "Fravega", "brand": "Xiaomi", "model": "Redmi Note 14",
+ "ram_gb": 8, "rom_gb": 256, "price_ars": 499999, "seller": "1P", "url": "https://..."}
+```
 
 These weren't scaffolded with guessed CSS selectors in this run, since none of the four sites could
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
