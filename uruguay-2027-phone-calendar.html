@@ -1,0 +1,221 @@
+<title>乌拉圭 2027 手机备货日历</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: 顶部摘要 → 甘特时间轴（横向滚动）→ 节点明细表 → 假设与风险 */
+:root{
+  --bg:#f5f8fb; --surface:#ffffff; --fg:#14202b; --muted:#5b6b79; --line:#d9e2ea;
+  --celeste:#2b7bc0; --celeste-soft:#d6e7f6; --sun:#d99a12; --sun-soft:#fbeccb;
+  --stock:#7d8ea0; --tier-s:#c8442f; --tier-a:#2b7bc0; --tier-b:#5f9a6b; --tier-c:#8a8f96;
+  --today:#c8442f;
+  --display:"Space Grotesk","Noto Sans SC",system-ui,sans-serif;
+  --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1720; --surface:#16212c; --fg:#e6edf3; --muted:#9aaab8; --line:#283745;
+  --celeste:#6fb1ea; --celeste-soft:#1d3a55; --sun:#f0b84a; --sun-soft:#4a3a16;
+  --stock:#8696a6; --tier-s:#ef7a64; --tier-a:#6fb1ea; --tier-b:#86c493; --tier-c:#9aa0a8; --today:#ef7a64;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1720; --surface:#16212c; --fg:#e6edf3; --muted:#9aaab8; --line:#283745;
+  --celeste:#6fb1ea; --celeste-soft:#1d3a55; --sun:#f0b84a; --sun-soft:#4a3a16;
+  --stock:#8696a6; --tier-s:#ef7a64; --tier-a:#6fb1ea; --tier-b:#86c493; --tier-c:#9aa0a8; --today:#ef7a64;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:32px}
+h1,h2{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.2}
+h2{font-size:21px;margin-bottom:12px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--celeste);font-weight:700}
+.lede{color:var(--muted);max-width:68ch;margin:8px 0 0}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.alert{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tier-s);border-radius:6px;padding:14px 16px;min-width:0}
+.alert.info{border-left-color:var(--sun)}
+.alert b{display:block;margin-bottom:4px}
+.alert p{margin:0;color:var(--muted);font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin-bottom:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:10px;border-radius:2px;display:inline-block}
+.sw.stock{background:repeating-linear-gradient(45deg,var(--stock) 0 3px,transparent 3px 6px);border:1px solid var(--stock)}
+.sw.warm{background:var(--sun)}
+.sw.sale{background:var(--celeste)}
+.sw.today{width:2px;height:14px;background:var(--today)}
+.scroller{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.gantt{min-width:980px;position:relative;font-size:13px}
+.g-head,.g-row{display:grid;grid-template-columns:190px 1fr}
+.g-head{border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2}
+.g-label{padding:8px 12px;border-right:1px solid var(--line);display:flex;align-items:center;gap:8px;min-width:0}
+.g-label .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-track{position:relative;height:40px}
+.g-head .g-track{height:44px}
+.month{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);padding:4px 6px;color:var(--muted);font-size:12px;line-height:1.25}
+.month.y{color:var(--fg);font-weight:700}
+.g-row{border-bottom:1px solid var(--line)}
+.g-row:last-child{border-bottom:0}
+.grid-line{position:absolute;top:0;bottom:0;border-left:1px dashed var(--line)}
+.bar{position:absolute;top:13px;height:14px;border-radius:3px}
+.bar.stock{background:repeating-linear-gradient(45deg,var(--stock) 0 3px,transparent 3px 6px);border:1px solid var(--stock);opacity:.85}
+.bar.warm{background:var(--sun)}
+.bar.sale{background:var(--celeste)}
+.peak{position:absolute;top:9px;width:10px;height:10px;transform:translateX(-5px) rotate(45deg);background:var(--fg);top:15px}
+.marker{position:absolute;top:8px;font-size:12px;color:var(--muted);white-space:nowrap;transform:translateX(-4px)}
+.marker::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--sun);margin-right:4px}
+.todayline{position:absolute;top:0;bottom:0;width:2px;background:var(--today);z-index:3;pointer-events:none}
+.todaytag{position:absolute;top:2px;left:4px;font-size:11px;color:var(--today);font-weight:700;white-space:nowrap}
+.tier{font-family:var(--display);font-weight:700;font-size:11px;padding:1px 6px;border-radius:3px;color:var(--surface);flex:none}
+.tier.S{background:var(--tier-s)}.tier.A{background:var(--tier-a)}.tier.B{background:var(--tier-b)}.tier.C{background:var(--tier-c)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:980px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:700;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.d{white-space:nowrap;font-family:var(--display);font-variant-numeric:tabular-nums}
+td.late{color:var(--tier-s);font-weight:700}
+.es{display:block;color:var(--muted);font-size:12px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.notes ul{margin:0;padding-left:18px;color:var(--fg)}
+.notes li{margin-bottom:6px}
+.notes li span{color:var(--muted)}
+.foot{font-size:13px;color:var(--muted)}
+.foot a{color:var(--celeste)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Uruguay · Smartphones · 2027</div>
+    <h1>乌拉圭 2027 电子消费促销节点与手机备货时间轴</h1>
+    <p class="lede">按“销售窗口开始日”倒推备货：下单 PO → 海运截船 → 到蒙得维的亚仓 → 上架预热。时间轴从 2026 年 10 月画起，因为 2027 年一季度节点的备货动作现在就已经开始了。</p>
+  </header>
+
+  <section class="alerts" id="alerts" aria-label="当前提醒"></section>
+
+  <section>
+    <h2>全年时间轴</h2>
+    <div class="legend">
+      <span><i class="sw stock"></i>备货期（PO → 到仓）</span>
+      <span><i class="sw warm"></i>预热/上架期</span>
+      <span><i class="sw sale"></i>销售窗口</span>
+      <span>◆ 销售峰值日</span>
+      <span><i class="sw today"></i>今天</span>
+      <span><b class="tier S">S</b> 年度大促 <b class="tier A">A</b> 重点节点 <b class="tier B">B</b> 次级 <b class="tier C">C</b> 淡季/事件</span>
+    </div>
+    <div class="scroller"><div class="gantt" id="gantt"></div></div>
+  </section>
+
+  <section>
+    <h2>节点明细与备货建议</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>节点</th><th>销售窗口</th><th>级别</th><th>PO 下单</th><th>海运截船</th><th>到仓</th><th>预热上架</th><th>备货量<br>（对比平日月销）</th><th>主推机型 / 打法</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h2>倒推规则（可按自己的供应链改）</h2>
+      <ul>
+        <li><b class="num">T−12 周</b> 下单 PO <span>— 工厂/分销商排产或调拨 2–3 周</span></li>
+        <li><b class="num">T−8 周</b> 海运截船 <span>— 深圳/香港 → 蒙得维的亚约 35–45 天</span></li>
+        <li><b class="num">T−3 周</b> 到仓 <span>— 清关 + 入仓 7–14 天，留出缓冲</span></li>
+        <li><b class="num">T−2 周</b> 上架预热 <span>— Mercado Libre 及自营站上架、广告素材、分期方案</span></li>
+        <li><b>空运兜底</b> <span>— 门到门约 5–10 天，成本高，适合旗舰补货和海运来不及的节点</span></li>
+      </ul>
+    </div>
+    <div>
+      <h2>市场要点与风险</h2>
+      <ul>
+        <li><b>两笔 Aguinaldo（第13薪）</b> <span>— 6 月和 12 月发放，直接抬高父亲节和圣诞档的客单价。</span></li>
+        <li><b>分期免息（cuotas sin recargo）</b> <span>— 中高端机型的转化关键，提前和银行/发卡方锁定活动。</span></li>
+        <li><b>渠道</b> <span>— Mercado Libre 是主要线上流量入口，配合本地电器连锁与运营商渠道。</span></li>
+        <li><b>品牌格局</b> <span>— 三星、摩托罗拉、苹果为主，小米等增长中；具体份额请以最新数据为准。</span></li>
+        <li><b>淡季</b> <span>— 狂欢节和 Semana de Turismo（复活节周）大量人口出游，适合清库存而非冲量。</span></li>
+        <li><b>需核实</b> <span>— CEDU 的 Ciberlunes 两期日期每年公布，表中为预估；跨境小包免税政策近年有调整，影响直邮竞争。</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="foot">日期依据：法定/固定节日按 2027 年日历推算（母亲节为 5 月第二个周日，父亲节为 7 月第二个周日，儿童节为 8 月第二个周日，复活节 2027-03-28）。Black Friday / Cyber Monday 按国际日期 2027-11-26 / 11-29。Ciberlunes 参考 CEDU 往年“上半年 5–6 月、下半年 10–11 月”两期的惯例，见 <a href="https://cuti.org.uy/en/noticias/de-socios/se-acerca-la-decima-edicion-de-ciberlunes-con-58-marcas-adheridas/" target="_blank" rel="noopener">CUTI 往期报道</a>。备货系数为经验参考，请用自有销售数据校准。</p>
+</div>
+
+<script>
+const D=s=>new Date(s+"T00:00:00");
+const START=D("2026-10-01"), END=D("2028-01-01"), TODAY=D("2026-11-10");
+const SPAN=(END-START)/864e5;
+const pct=d=>((d-START)/864e5/SPAN*100);
+const add=(d,n)=>new Date(d.getTime()+n*864e5);
+const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const md=d=>`${d.getMonth()+1}/${d.getDate()}`;
+
+// type: "promo" 需要备货；"event" 仅标记
+const nodes=[
+ {name:"三王节 / 儿童礼物",es:"Día de Reyes (Niños)",tier:"A",s:"2026-12-28",e:"2027-01-06",peak:"2027-01-06",qty:"1.3×",
+  sku:"入门/中端机（摩托罗拉 G、三星 A 系列）、平板、耳机手表配件；接圣诞余量"},
+ {name:"狂欢节",es:"Carnaval",tier:"C",type:"event",s:"2027-02-08",e:"2027-02-09",note:"出游，销售偏弱"},
+ {name:"三星旗舰新机",es:"Galaxy S 发布（预计）",tier:"B",type:"event",s:"2027-02-15",e:"2027-02-15",note:"预售，旧款旗舰降价清货"},
+ {name:"开学季",es:"Vuelta a clases",tier:"B",s:"2027-02-15",e:"2027-03-07",peak:"2027-03-01",qty:"1.2×",
+  sku:"学生机：入门 4G/5G、二手翻新与上一代机型，捆绑耳机/保护壳"},
+ {name:"旅游周（复活节）",es:"Semana de Turismo",tier:"C",type:"event",s:"2027-03-22",e:"2027-03-28",note:"全国长假，清库存窗口"},
+ {name:"母亲节",es:"Día de la Madre",tier:"A",s:"2027-04-26",e:"2027-05-09",peak:"2027-05-09",qty:"1.5×",
+  sku:"中端主力（三星 A5x、摩托 Edge）、大屏/拍照卖点、iPhone 上一代；礼盒包装"},
+ {name:"Ciberlunes 上半年",es:"CEDU（日期预估）",tier:"A",s:"2027-06-07",e:"2027-06-09",peak:"2027-06-07",qty:"1.4×",
+  sku:"线上专属价、分期免息；以爆款单品引流，备足 Mercado Libre 仓"},
+ {name:"父亲节 + 年中奖金",es:"Día del Padre · Aguinaldo 6月",tier:"A",s:"2027-06-28",e:"2027-07-11",peak:"2027-07-11",qty:"1.5×",
+  sku:"中高端与旗舰（Galaxy S、iPhone）、智能手表、蓝牙音箱；奖金推高客单价"},
+ {name:"冬季假期",es:"Vacaciones de julio",tier:"C",type:"event",s:"2027-07-05",e:"2027-07-16",note:"与父亲节叠加，游戏机/平板需求"},
+ {name:"儿童节",es:"Día del Niño",tier:"B",s:"2027-08-01",e:"2027-08-08",peak:"2027-08-08",qty:"1.2×",
+  sku:"青少年首部手机、平板、儿童手表；价格带集中在入门段"},
+ {name:"新 iPhone 发布",es:"Apple（预计 9 月）",tier:"B",type:"event",s:"2027-09-14",e:"2027-09-14",note:"本地上市通常晚于首发；上一代降价"},
+ {name:"Ciberlunes 下半年",es:"CEDU（日期预估）",tier:"A",s:"2027-10-04",e:"2027-10-06",peak:"2027-10-04",qty:"1.4×",
+  sku:"清上一代 iPhone / Galaxy 库存，新机预售引流"},
+ {name:"黑五 + 网络星期一",es:"Black Friday · Cyber Monday",tier:"S",s:"2027-11-22",e:"2027-11-29",peak:"2027-11-26",qty:"2.0–2.5×",
+  sku:"全价格带，旗舰深折扣引流 + 中端走量；与圣诞合并一次大 PO，分两批到货"},
+ {name:"圣诞 / 年终奖金",es:"Navidad · Aguinaldo 12月",tier:"S",s:"2027-12-01",e:"2027-12-24",peak:"2027-12-23",qty:"2.0×",
+  sku:"新款旗舰、礼品套装、配件；12 月中旬后转空运补热门 SKU"},
+];
+
+// 倒推：PO=S-84，海运截船=S-56，到仓=S-21，上架=S-14
+nodes.forEach(n=>{n.S=D(n.s);n.E=D(n.e);
+  if(n.type!=="event"){n.po=add(n.S,-84);n.ship=add(n.S,-56);n.arr=add(n.S,-21);n.list=add(n.S,-14);}});
+
+// Gantt
+const g=document.getElementById("gantt");
+let head=`<div class="g-head"><div class="g-label"><b>节点</b></div><div class="g-track">`;
+const months=[];for(let d=new Date(START);d<END;d=new Date(d.getFullYear(),d.getMonth()+1,1))months.push(new Date(d));
+months.forEach(m=>{const first=m.getMonth()===0;head+=`<div class="month${first?" y":""}" style="left:${pct(m)}%">${first?m.getFullYear()+"<br>":""}${m.getMonth()+1}月</div>`});
+head+=`</div></div>`;
+let rows="";
+nodes.forEach(n=>{
+  rows+=`<div class="g-row"><div class="g-label"><b class="tier ${n.tier}">${n.tier}</b><span class="t" title="${n.name} · ${n.es}">${n.name}</span></div><div class="g-track">`;
+  months.forEach(m=>rows+=`<div class="grid-line" style="left:${pct(m)}%"></div>`);
+  if(n.type==="event"){
+    rows+=`<div class="bar sale" style="left:${pct(n.S)}%;width:${Math.max(.35,pct(add(n.E,1))-pct(n.S))}%;opacity:.35"></div>`;
+    rows+=`<div class="marker" style="left:${pct(add(n.E,2))}%;top:12px">${n.note}</div>`;
+  }else{
+    rows+=`<div class="bar stock" style="left:${pct(n.po)}%;width:${pct(n.arr)-pct(n.po)}%" title="PO ${fmt(n.po)} → 到仓 ${fmt(n.arr)}"></div>`;
+    rows+=`<div class="bar warm" style="left:${pct(n.arr)}%;width:${pct(n.S)-pct(n.arr)}%" title="到仓 ${fmt(n.arr)} → 开卖 ${fmt(n.S)}"></div>`;
+    rows+=`<div class="bar sale" style="left:${pct(n.S)}%;width:${pct(add(n.E,1))-pct(n.S)}%" title="销售 ${fmt(n.S)} – ${fmt(n.E)}"></div>`;
+    rows+=`<div class="peak" style="left:${pct(D(n.peak))+ (100/SPAN)/2}%" title="峰值 ${n.peak}"></div>`;
+  }
+  rows+=`</div></div>`;
+});
+g.innerHTML=head+rows+`<div class="todayline" style="left:calc(190px + (100% - 190px) * ${pct(TODAY)/100})"><span class="todaytag">今天 11/10</span></div>`;
+
+// Table
+const tb=document.getElementById("tbody");
+tb.innerHTML=nodes.map(n=>{
+  const range=n.s===n.e?fmt(n.S):`${fmt(n.S)} – ${md(n.E)}`;
+  if(n.type==="event")return `<tr><td><b>${n.name}</b><span class="es">${n.es}</span></td><td class="d">${range}</td><td><b class="tier ${n.tier}">${n.tier}</b></td><td colspan="4" style="color:var(--muted)">事件节点，不单独备货</td><td>—</td><td>${n.note}</td></tr>`;
+  const c=d=>`<td class="d${d<TODAY?" late":""}">${fmt(d)}</td>`;
+  return `<tr><td><b>${n.name}</b><span class="es">${n.es}</span></td><td class="d">${range}</td><td><b class="tier ${n.tier}">${n.tier}</b></td>${c(n.po)}${c(n.ship)}${c(n.arr)}${c(n.list)}<td class="num">${n.qty}</td><td>${n.sku}</td></tr>`;
+}).join("");
+
+// Alerts based on today
+const al=[];
+nodes.filter(n=>n.type!=="event").forEach(n=>{
+  if(n.ship<TODAY&&n.S>TODAY)al.push(`<div class="alert"><b>${n.name}：海运已来不及</b><p>海运截船日 ${fmt(n.ship)} 已过，开卖 ${fmt(n.S)}。到仓需在 ${fmt(n.arr)} 前，剩余缺口改走空运。</p></div>`);
+  else if(n.po>=TODAY&&(n.po-TODAY)/864e5<=30)al.push(`<div class="alert"><b>${n.name}：${Math.round((n.po-TODAY)/864e5)} 天内需下 PO</b><p>PO ${fmt(n.po)} → 截船 ${fmt(n.ship)} → 到仓 ${fmt(n.arr)}，${fmt(n.S)} 开卖。</p></div>`);
+});
+al.push(`<div class="alert info"><b>2027 年两个 S 级档期合并备货</b><p>黑五与圣诞相隔不到一周，建议 8 月底下一次大 PO（${fmt(nodes.find(n=>n.tier==="S").po)}），分两船到货。</p></div>`);
+document.getElementById("alerts").innerHTML=al.join("");
+</script>
