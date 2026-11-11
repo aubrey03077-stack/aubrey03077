@@ -43,3 +43,9 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+## Run log
+
+| Run date (UTC) | Frávega | OnCity | Personal | Claro | Outcome |
+|---|---|---|---|---|---|
+| 2026-11-11 | 待核实 (CONNECT 403 / DNS blocked) | 待核实 (CONNECT 403 / DNS blocked) | 待核实 (CONNECT 403 / fetch refused) | 待核实 (CONNECT 403 / DNS blocked) | No data scraped; no dashboard generated |
