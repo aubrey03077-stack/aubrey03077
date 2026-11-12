@@ -36,38 +36,39 @@ def pct(v):
     return f"{v:.1f}%" if v >= INSIDE_MIN else ""
 
 
-fig, axes = plt.subplots(2, 4, figsize=(20, 10.5))
-for ax, (channel, shares) in zip(axes.flat, DATA.items()):
-    items = [(k, v) for k, v in shares.items() if v > 0]
-    labels, values = zip(*items)
-    outer = [f"{v:.1f}%" if 2.0 <= v < INSIDE_MIN else "" for v in values]
-    ax.pie(
-        values,
-        labels=outer,
-        labeldistance=1.1,
-        colors=[COLORS[k] for k in labels],
-        autopct=pct,
-        startangle=90,
-        counterclock=False,
-        pctdistance=0.75,
-        wedgeprops=dict(edgecolor="white", linewidth=1.5),
-        textprops=dict(color="white", fontsize=11, fontweight="bold"),
-    )
-    for t in ax.texts:
-        if t.get_text() in outer and t.get_text():
-            t.set_color("#333333")
-            t.set_fontsize(10)
-    title = channel + ("\n(仅有小米数据)" if channel == "TC" else "")
-    ax.set_title(title, fontsize=15, fontweight="bold")
-    if channel == "TC":
+if __name__ == "__main__":
+    fig, axes = plt.subplots(2, 4, figsize=(20, 10.5))
+    for ax, (channel, shares) in zip(axes.flat, DATA.items()):
+        items = [(k, v) for k, v in shares.items() if v > 0]
+        labels, values = zip(*items)
+        outer = [f"{v:.1f}%" if 2.0 <= v < INSIDE_MIN else "" for v in values]
+        ax.pie(
+            values,
+            labels=outer,
+            labeldistance=1.1,
+            colors=[COLORS[k] for k in labels],
+            autopct=pct,
+            startangle=90,
+            counterclock=False,
+            pctdistance=0.75,
+            wedgeprops=dict(edgecolor="white", linewidth=1.5),
+            textprops=dict(color="white", fontsize=11, fontweight="bold"),
+        )
         for t in ax.texts:
-            if t.get_text() == "94.5%":
-                t.set_color("#888888")
+            if t.get_text() in outer and t.get_text():
+                t.set_color("#333333")
+                t.set_fontsize(10)
+        title = channel + ("\n(仅有小米数据)" if channel == "TC" else "")
+        ax.set_title(title, fontsize=15, fontweight="bold")
+        if channel == "TC":
+            for t in ax.texts:
+                if t.get_text() == "94.5%":
+                    t.set_color("#888888")
 
-axes.flat[-1].axis("off")
-handles = [plt.matplotlib.patches.Patch(color=c, label=k) for k, c in COLORS.items()]
-axes.flat[-1].legend(handles=handles, loc="center", fontsize=13, frameon=False, title="品牌", title_fontsize=14)
+    axes.flat[-1].axis("off")
+    handles = [plt.matplotlib.patches.Patch(color=c, label=k) for k, c in COLORS.items()]
+    axes.flat[-1].legend(handles=handles, loc="center", fontsize=13, frameon=False, title="品牌", title_fontsize=14)
 
-fig.suptitle("各渠道品牌占比 (XM IHS)", fontsize=20, fontweight="bold")
-fig.tight_layout(rect=[0, 0, 1, 0.95])
-fig.savefig(__file__.replace(".py", ".png"), dpi=150)
+    fig.suptitle("各渠道品牌占比 (XM IHS)", fontsize=20, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(__file__.replace(".py", ".png"), dpi=150)
