@@ -1,0 +1,4 @@
+{"ts": "2026-11-13T09:05:31-03:00", "date": "2026-11-13", "channel": "Frávega", "url": "https://www.fravega.com/l/celulares/celulares-liberados/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}
+{"ts": "2026-11-13T09:05:31-03:00", "date": "2026-11-13", "channel": "OnCity", "url": "https://www.oncity.com/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}
+{"ts": "2026-11-13T09:05:31-03:00", "date": "2026-11-13", "channel": "Personal", "url": "https://www.personal.com.ar/tienda/celulares", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}
+{"ts": "2026-11-13T09:05:31-03:00", "date": "2026-11-13", "channel": "Claro", "url": "https://tienda.claro.com.ar/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}
