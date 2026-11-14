@@ -6,6 +6,8 @@ price dashboard.
 
 ## Status: BLOCKED — network egress denied to all four target domains
 
+**Run log:** 2026-11-12 blocked · 2026-11-13 blocked · 2026-11-14 blocked again (all four hosts; WebFetch also fails DNS: proxy CONNECT → 403; see `data/source_check.jsonl`).
+
 This session's outbound network policy rejects connections to every source required by the task:
 
 | Channel  | URL                                                        | Result |
@@ -29,17 +31,18 @@ One of the following, granted by whoever administers this environment's network 
 2. Run the scraping step somewhere with broader/allowlisted egress (e.g. a different environment
    or a scraping proxy service already permitted here) and hand the resulting JSON to this repo.
 
-### Planned pipeline (ready to build once access is available)
+### Pipeline
 
-- `scripts/scrape_<channel>.py` — one scraper per channel, extracting model, RAM/ROM, cash price
-  (`Precio al contado`, ARS), and 1P vs. 3P seller tag.
-- `data/price_history.jsonl` — one append-only record per product per day, the source of truth for
-  trend charts and day-over-day (>10%) change detection.
-- `scripts/build_dashboard.py` — reads `data/price_history.jsonl` and renders `dashboard.html` with
-  the three required modules (cross-channel comparison, price history/trend, competitive landscape
-  & price-matching alerts).
+| Piece | State |
+|-------|-------|
+| `scripts/source_check.py` — probes the 4 source URLs, appends to `data/source_check.jsonl` (`ok` / `待核实` / `blocked`) | ✅ built, runs daily |
+| `scripts/build_dashboard.py` + `scripts/dashboard_template.html` — renders `dashboard.html` from `data/price_history.jsonl` | ✅ built, verified in Chromium against a synthetic fixture (not committed) |
+| `scripts/scrape_<channel>.py` — per-channel scrapers (model, RAM/ROM, cash price, 1P/3P, cuotas) | ⏳ blocked: they need the real page markup, and none of the sites can be loaded yet |
 
-These weren't scaffolded with guessed CSS selectors in this run, since none of the four sites could
-actually be loaded to verify page structure — writing scrapers blind against unseen markup would
-just create broken code that looks done. They'll be written against real page structure as soon as
-egress is unblocked.
+The record schema for `data/price_history.jsonl` is documented at the top of `scripts/build_dashboard.py`.
+The dashboard has the self-check panel plus all three modules (cross-channel 1P/3P cash and installment comparison;
+history line chart and table filtered by brand, channel and tier; per-tier landscape with cross-brand ±3% price matches,
+>15% price gaps and >10% day-over-day alerts). Until scrapers land it shows only the self-check results
+and empty states. It contains no made-up prices.
+
+Daily run: `python3 scripts/source_check.py && python3 scripts/build_dashboard.py`

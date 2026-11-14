@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR Phone Prices</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--mute:#6b6b70;--line:#e4e4e0;--accent:#2a62d6;--up:#c0392b;--down:#1e8449;--warn:#fff4d6;
+--c1:#2a62d6;--c2:#e07b39;--c3:#2e9e6a;--c4:#9b59b6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--card:#1e1e21;--ink:#ececee;--mute:#9a9aa1;--line:#333338;--accent:#6f9bff;--up:#ff7a6b;--down:#5fd39a;--warn:#3a3320;--c1:#6f9bff;--c2:#f2a36b;--c3:#5fd39a;--c4:#c39be0}}
+:root[data-theme="dark"]{--bg:#141416;--card:#1e1e21;--ink:#ececee;--mute:#9a9aa1;--line:#333338;--accent:#6f9bff;--up:#ff7a6b;--down:#5fd39a;--warn:#3a3320;--c1:#6f9bff;--c2:#f2a36b;--c3:#5fd39a;--c4:#c39be0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:16px 0 8px;color:var(--mute)}
+.sub{color:var(--mute);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 16px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+select{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;max-width:100%}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mute);font-weight:600;font-size:12px}
+td.n{text-align:right}
+.up{color:var(--up)}.down{color:var(--down)}.mute{color:var(--mute)}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:12px;border:1px solid var(--line)}
+.bad{background:var(--warn)}
+.empty{padding:24px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:8px}
+.chart{position:relative;height:340px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+</style>
+</head>
+<body>
+<main>
+<h1>阿根廷手机渠道价格看板</h1>
+<p class="sub" id="meta"></p>
+
+<section class="card" id="selfcheck"><h2>数据源自检 (Self-Check)</h2><div id="checks"></div></section>
+
+<section class="card"><h2>模块一 · 竞品机型比价 (Cross-Channel Price Comparison)</h2>
+<div class="ctrl"><select id="m1brand"></select><select id="m1model"></select></div>
+<h3>现金价 Precio al contado (ARS) · 1P vs 3P</h3><div class="tw" id="m1cash"></div>
+<h3>分期 Cuotas</h3><div class="tw" id="m1inst"></div>
+</section>
+
+<section class="card"><h2>模块二 · 价格变动趋势 (Daily Price History & Trend)</h2>
+<div class="ctrl"><select id="m2brand"></select><select id="m2channel"></select><select id="m2tier"></select></div>
+<div class="chart"><canvas id="m2chart"></canvas></div>
+<h3>历史价格表（每行最低现金价）</h3><div class="tw" id="m2table"></div>
+</section>
+
+<section class="card"><h2>模块三 · 竞争全景图与价格匹配 (Competitive Landscape & Price Matching)</h2>
+<h3>⚠ 单日价格变动 &gt;10% 预警</h3><div class="tw" id="m3alerts"></div>
+<div class="grid" id="m3tiers"></div>
+</section>
+</main>
+<script>
+const DATA = {"history": [], "checks": [{"ts": "2026-11-14T09:04:36-03:00", "date": "2026-11-14", "channel": "Frávega", "url": "https://www.fravega.com/l/celulares/celulares-liberados/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}, {"ts": "2026-11-14T09:04:36-03:00", "date": "2026-11-14", "channel": "OnCity", "url": "https://www.oncity.com/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}, {"ts": "2026-11-14T09:04:36-03:00", "date": "2026-11-14", "channel": "Personal", "url": "https://www.personal.com.ar/tienda/celulares", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}, {"ts": "2026-11-14T09:04:36-03:00", "date": "2026-11-14", "channel": "Claro", "url": "https://tienda.claro.com.ar/", "status": "blocked", "http": null, "detail": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"}]} || {history:[],checks:[]};
+const H = DATA.history, BRANDS=["Xiaomi","Samsung","Motorola","Honor"], CH=["Frávega","OnCity","Personal","Claro"],
+TIERS=["Entry-level","Mid-to-High","Flagship"], TIERZH={"Entry-level":"入门","Mid-to-High":"中高端","Flagship":"旗舰"};
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const BCOL=()=>({Xiaomi:css('--c2'),Samsung:css('--c1'),Motorola:css('--c3'),Honor:css('--c4')});
+const fmt=n=>n==null?'—':'$'+Math.round(n).toLocaleString('es-AR');
+const pct=x=>(x>0?'+':'')+(x*100).toFixed(1)+'%';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sku=r=>`${r.model} ${r.ram||''}/${r.rom||''}`.replace(/ \/$/,'');
+const dates=[...new Set(H.map(r=>r.date))].sort(), today=dates.at(-1), prev=dates.at(-2);
+const opts=(el,list,all)=>{el.innerHTML=(all?`<option value="">${all}</option>`:'')+list.map(v=>`<option>${esc(v)}</option>`).join('')};
+const empty=msg=>`<div class="empty">${msg}</div>`;
+const NODATA='暂无价格数据：数据源尚未成功抓取（见上方自检）。';
+
+document.getElementById('meta').textContent = today
+  ? `最新数据日期 ${today}（阿根廷时间）· ${H.filter(r=>r.date===today).length} 条在售记录 · 历史 ${dates.length} 天`
+  : '尚无任何价格记录';
+
+// ---- self-check
+(()=>{const c=DATA.checks; const el=document.getElementById('checks');
+ if(!c.length){el.innerHTML=empty('无自检记录');return}
+ const lbl={ok:'正常',blocked:'无法连接',"待核实":'待核实'};
+ el.innerHTML=`<div class="tw"><table><tr><th>渠道</th><th>URL</th><th>状态</th><th>详情</th><th>时间</th></tr>${c.map(x=>
+ `<tr class="${x.status==='ok'?'':'bad'}"><td>${esc(x.channel)}</td><td>${esc(x.url)}</td><td><span class="pill">${lbl[x.status]||esc(x.status)}</span></td><td class="mute">${esc(x.http??'')} ${esc(x.detail)}</td><td class="mute">${esc(x.ts)}</td></tr>`).join('')}</table></div>`;
+ const dead=H.filter(r=>r.date===today&&r.status==='待核实');
+ if(dead.length) el.innerHTML+=`<h3>产品链接待核实 (${dead.length})</h3><div class="tw"><table>${dead.map(r=>`<tr class="bad"><td>${esc(r.channel)}</td><td>${esc(sku(r))}</td><td>${esc(r.url)}</td></tr>`).join('')}</table></div>`;
+})();
+
+// ---- module 1
+const T=H.filter(r=>r.date===today);
+const m1b=document.getElementById('m1brand'), m1m=document.getElementById('m1model');
+opts(m1b,BRANDS);
+function m1models(){opts(m1m,[...new Set(T.filter(r=>r.brand===m1b.value).map(sku))].sort(),'全部机型');}
+function m1(){
+ const rows=T.filter(r=>r.brand===m1b.value&&(!m1m.value||sku(r)===m1m.value));
+ if(!rows.length){['m1cash','m1inst'].forEach(id=>document.getElementById(id).innerHTML=empty(H.length?'该品牌今日无在售记录':NODATA));return}
+ const skus=[...new Set(rows.map(sku))].sort();
+ const best=(s,c,t)=>{const x=rows.filter(r=>sku(r)===s&&r.channel===c&&r.seller_type===t&&r.status!=='待核实');return x.length?x.reduce((a,b)=>a.cash_price<=b.cash_price?a:b):null};
+ let h=`<table><tr><th>机型 / 配置</th>${CH.map(c=>`<th>${c} 1P</th><th>${c} 3P</th>`).join('')}<th>最低</th></tr>`;
+ skus.forEach(s=>{const cells=[];CH.forEach(c=>['1P','3P'].forEach(t=>cells.push(best(s,c,t))));
+  const min=Math.min(...cells.filter(Boolean).map(x=>x.cash_price));
+  h+=`<tr><td>${esc(s)}</td>${cells.map(x=>`<td class="n" ${x&&x.cash_price===min?'style="font-weight:700"':''} title="${x?esc(x.seller):''}">${x?`<a href="${esc(x.url)}" target="_blank" rel="noopener" style="color:inherit">${fmt(x.cash_price)}</a>`:'<span class="mute">—</span>'}</td>`).join('')}<td class="n">${fmt(min)}</td></tr>`});
+ document.getElementById('m1cash').innerHTML=h+'</table>';
+ let k=`<table><tr><th>机型 / 配置</th><th>渠道</th><th>卖家</th><th>现金价</th><th>期数</th><th>每期</th><th>分期总价</th><th>分期溢价</th><th>免息</th></tr>`;
+ rows.filter(r=>r.installments).sort((a,b)=>sku(a).localeCompare(sku(b))||CH.indexOf(a.channel)-CH.indexOf(b.channel)).forEach(r=>{const i=r.installments, tot=i.total??i.n*i.amount;
+  k+=`<tr><td>${esc(sku(r))}</td><td>${esc(r.channel)}</td><td>${esc(r.seller_type)} · ${esc(r.seller)}</td><td class="n">${fmt(r.cash_price)}</td><td class="n">${i.n}</td><td class="n">${fmt(i.amount)}</td><td class="n">${fmt(tot)}</td><td class="n">${pct(tot/r.cash_price-1)}</td><td>${i.interest_free?'是':'否'}</td></tr>`});
+ document.getElementById('m1inst').innerHTML=rows.some(r=>r.installments)?k+'</table>':empty('无分期信息');
+}
+m1b.onchange=()=>{m1models();m1()}; m1m.onchange=m1; m1models(); m1();
+
+// ---- module 2
+const m2b=document.getElementById('m2brand'),m2c=document.getElementById('m2channel'),m2t=document.getElementById('m2tier');
+opts(m2b,BRANDS,'全部品牌');opts(m2c,CH,'全部渠道');m2t.innerHTML='<option value="">全部档位</option>'+TIERS.map(t=>`<option value="${t}">${TIERZH[t]} ${t}</option>`).join('');
+let chart;
+function m2(){
+ const rows=H.filter(r=>(!m2b.value||r.brand===m2b.value)&&(!m2c.value||r.channel===m2c.value)&&(!m2t.value||r.tier===m2t.value)&&r.status!=='待核实');
+ const key=r=>`${r.brand} ${sku(r)} @${r.channel}`, series={};
+ rows.forEach(r=>{const s=series[key(r)]??={brand:r.brand,p:{}};s.p[r.date]=Math.min(s.p[r.date]??Infinity,r.cash_price)});
+ const keys=Object.keys(series).sort();
+ if(chart)chart.destroy();
+ const cv=document.getElementById('m2chart');
+ if(!keys.length){cv.parentElement.style.display='none';document.getElementById('m2table').innerHTML=empty(H.length?'无符合筛选条件的数据':NODATA);return}
+ cv.parentElement.style.display='';const BC=BCOL();
+ chart=new Chart(cv,{type:'line',data:{labels:dates,datasets:keys.slice(0,40).map((k,i)=>({label:k,data:dates.map(d=>series[k].p[d]??null),borderColor:BC[series[k].brand],backgroundColor:BC[series[k].brand],borderDash:i%3?[4+i%3*2,3]:[],spanGaps:true,pointRadius:2,borderWidth:1.5}))},
+  options:{maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:keys.length<=12,labels:{color:css('--mute'),boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+  scales:{x:{ticks:{color:css('--mute')},grid:{color:css('--line')}},y:{ticks:{color:css('--mute'),callback:v=>'$'+(v/1000).toLocaleString('es-AR')+'k'},grid:{color:css('--line')}}}}});
+ const show=dates.slice(-14);
+ document.getElementById('m2table').innerHTML=`<table><tr><th>机型 @渠道</th>${show.map(d=>`<th>${d.slice(5)}</th>`).join('')}<th>较前次</th></tr>${keys.map(k=>{const p=series[k].p,v=show.map(d=>p[d]);
+  const known=dates.filter(d=>p[d]!=null),a=p[known.at(-2)],b=p[known.at(-1)],ch=a&&b?b/a-1:null;
+  return `<tr><td>${esc(k)}</td>${v.map(x=>`<td class="n">${x==null?'<span class="mute">—</span>':fmt(x)}</td>`).join('')}<td class="n ${ch>0?'up':ch<0?'down':''}">${ch==null?'—':pct(ch)}</td></tr>`}).join('')}</table>`;
+}
+[m2b,m2c,m2t].forEach(e=>e.onchange=m2); m2();
+
+// ---- module 3
+(()=>{
+ // >10% alerts: same listing (brand+sku+channel+seller_type) today vs previous record
+ const lk=r=>`${r.brand}|${sku(r)}|${r.channel}|${r.seller_type}`, last={}, alerts=[];
+ H.filter(r=>r.status!=='待核实').sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{const k=lk(r);
+  if(r.date===today&&last[k]&&last[k].date!==today){const c=r.cash_price/last[k].cash_price-1;if(Math.abs(c)>0.10)alerts.push({r,from:last[k],c})}
+  if(r.date!==today)last[k]=r});
+ alerts.sort((a,b)=>Math.abs(b.c)-Math.abs(a.c));
+ document.getElementById('m3alerts').innerHTML=!H.length?empty(NODATA):!prev?empty('只有一天数据，暂无可对比的历史记录'):!alerts.length?empty('今日无变动超过 10% 的机型'):
+  `<table><tr><th>品牌</th><th>机型 / 配置</th><th>档位</th><th>渠道</th><th>前次</th><th>今日</th><th>变动</th></tr>${alerts.map(a=>`<tr class="bad"><td>${esc(a.r.brand)}</td><td>${esc(sku(a.r))}</td><td>${TIERZH[a.r.tier]||esc(a.r.tier)}</td><td>${esc(a.r.channel)} ${esc(a.r.seller_type)}</td><td class="n">${fmt(a.from.cash_price)} <span class="mute">${a.from.date.slice(5)}</span></td><td class="n">${fmt(a.r.cash_price)}</td><td class="n ${a.c>0?'up':'down'}">${pct(a.c)}</td></tr>`).join('')}</table>`;
+ // per-tier landscape: lowest cash price per SKU across channels today
+ const wrap=document.getElementById('m3tiers'),BC=BCOL();
+ TIERS.forEach(t=>{const by={};T.filter(r=>r.tier===t&&r.status!=='待核实').forEach(r=>{const k=r.brand+'|'+sku(r);if(!by[k]||r.cash_price<by[k].cash_price)by[k]=r});
+  const L=Object.values(by).sort((a,b)=>a.cash_price-b.cash_price), div=document.createElement('div');
+  div.innerHTML=`<h3>${TIERZH[t]} · ${t}</h3>`;wrap.appendChild(div);
+  if(!L.length){div.innerHTML+=empty(H.length?'今日无该档位记录':'暂无数据');return}
+  const box=document.createElement('div');box.className='chart';box.style.height=Math.max(160,L.length*22+60)+'px';box.innerHTML='<canvas></canvas>';div.appendChild(box);
+  new Chart(box.firstChild,{type:'bar',data:{labels:L.map(r=>`${r.brand} ${sku(r)}`),datasets:[{data:L.map(r=>r.cash_price),backgroundColor:L.map(r=>BC[r.brand]),borderRadius:3}]},
+   options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.parsed.x)} · ${L[c.dataIndex].channel} ${L[c.dataIndex].seller_type}`}}},
+   scales:{x:{ticks:{color:css('--mute'),callback:v=>'$'+(v/1000).toLocaleString('es-AR')+'k'},grid:{color:css('--line')}},y:{ticks:{color:css('--ink'),font:{size:11}},grid:{display:false}}}}});
+  // price matching (cross-brand, within 3%) and gaps (>15% between neighbours)
+  const match=[],gap=[];
+  for(let i=1;i<L.length;i++){const a=L[i-1],b=L[i],d=b.cash_price/a.cash_price-1;
+   if(a.brand!==b.brand&&d<=0.03)match.push([a,b,d]); if(d>0.15)gap.push([a,b,d]);}
+  const tb=document.createElement('div');tb.className='tw';div.appendChild(tb);
+  tb.innerHTML=`<table><tr><th>类型</th><th>机型 A</th><th>机型 B</th><th>价差</th></tr>${
+   match.map(([a,b,d])=>`<tr><td><span class="pill">价格匹配</span></td><td>${esc(a.brand+' '+sku(a))}<br><span class="mute">${fmt(a.cash_price)}</span></td><td>${esc(b.brand+' '+sku(b))}<br><span class="mute">${fmt(b.cash_price)}</span></td><td class="n">${pct(d)}</td></tr>`).join('')}${
+   gap.map(([a,b,d])=>`<tr><td><span class="pill bad">价差空档</span></td><td>${esc(a.brand+' '+sku(a))}<br><span class="mute">${fmt(a.cash_price)}</span></td><td>${esc(b.brand+' '+sku(b))}<br><span class="mute">${fmt(b.cash_price)}</span></td><td class="n">${fmt(b.cash_price-a.cash_price)} (${pct(d)})</td></tr>`).join('')}</table>`;
+  if(!match.length&&!gap.length)tb.innerHTML=`<p class="mute">无跨品牌 ±3% 价格匹配，也无 &gt;15% 价差空档。</p>`;
+ });
+})();
+</script>
+</body>
+</html>
