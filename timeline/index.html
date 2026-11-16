@@ -1,0 +1,175 @@
+<title>阿根廷首销物流排期</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: label column + scaled time track; a "today" rule cuts through every row, the active node gets a highlighted row. */
+:root{
+  --bg:#fbfbf9; --fg:#1f2328; --muted:#8a8f98; --line:#e3e4e1; --holiday:#ffffff;
+  --blue-fill:#d4e6fb; --blue-stroke:#8fbcef;
+  --amber-fill:#f8dda6; --amber-stroke:#e2a52a;
+  --green-fill:#d3eccd; --green-stroke:#7cc074;
+  --launch:#8b2525; --launch-bg:#f9d6d6;
+  --now:#e5484d; --now-bg:#fff0f0; --done:#b9bdc4;
+  --font:"Noto Sans SC","Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17191c; --fg:#e8e9ea; --muted:#8b9099; --line:#2c2f34; --holiday:#202327;
+  --blue-fill:#1e3550; --blue-stroke:#4f86c6; --amber-fill:#4a3814; --amber-stroke:#d39a2a;
+  --green-fill:#1d3a1f; --green-stroke:#5aa553; --launch:#e07070; --launch-bg:#3d1c1c;
+  --now:#ff6369; --now-bg:#2e1a1c; --done:#555a62; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17191c; --fg:#e8e9ea; --muted:#8b9099; --line:#2c2f34; --holiday:#202327;
+  --blue-fill:#1e3550; --blue-stroke:#4f86c6; --amber-fill:#4a3814; --amber-stroke:#d39a2a;
+  --green-fill:#1d3a1f; --green-stroke:#5aa553; --launch:#e07070; --launch-bg:#3d1c1c;
+  --now:#ff6369; --now-bg:#2e1a1c; --done:#555a62; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px}
+.page{padding-block:20px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.status{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;margin:0 0 14px;padding:12px 14px;border:1.5px solid var(--now);background:var(--now-bg);border-radius:10px}
+.status b{color:var(--now)}
+.status .sub{color:var(--muted)}
+.scroll{overflow-x:auto}
+.chart{min-width:900px;display:grid;grid-template-columns:270px 1fr;position:relative}
+.axis{grid-column:2;position:relative;height:84px}
+.tick{position:absolute;bottom:30px;transform:translateX(-50%);color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.flag{position:absolute;top:4px;transform:translateX(-50%);padding:5px 12px;border-radius:10px;border:1.5px solid var(--line);font-size:14px;white-space:nowrap;background:var(--bg)}
+.flag.launch{background:var(--launch-bg);border-color:var(--launch);color:var(--launch);font-weight:600}
+.flag.today{background:var(--now);border-color:var(--now);color:#fff;font-weight:700;top:auto;bottom:2px;font-size:13px;padding:3px 10px}
+.group{grid-column:1/-1;font-weight:700;font-size:16px;padding:18px 0 6px}
+.label{grid-column:1;padding:3px 8px 3px 0;line-height:1.35;border-right:1px solid var(--line)}
+.label .d{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.track{grid-column:2;position:relative;height:62px}
+.row-now .label,.row-now .track{background:var(--now-bg)}
+.row-now .label{box-shadow:inset 4px 0 0 var(--now);padding-left:10px}
+.row-now .label .n{font-weight:700}
+.row-done .label .n{color:var(--muted)}
+.badge{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;font-size:12px;font-weight:600;vertical-align:1px}
+.badge.now{background:var(--now);color:#fff}
+.badge.done{border:1px solid var(--done);color:var(--muted);font-weight:500}
+.badge.next{border:1px solid var(--now);color:var(--now)}
+.bar{position:absolute;top:50%;height:30px;transform:translateY(-50%);border-radius:6px;border:1.5px solid;min-width:12px;box-sizing:border-box}
+.bar.blue{background:var(--blue-fill);border-color:var(--blue-stroke)}
+.bar.amber{background:var(--amber-fill);border-color:var(--amber-stroke)}
+.bar.green{background:var(--green-fill);border-color:var(--green-stroke);border-style:dashed}
+.row-done .bar{opacity:.45}
+.row-now .bar{border-color:var(--now);border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--now) 25%,transparent)}
+.bar .prog{position:absolute;inset:0 auto 0 0;background:repeating-linear-gradient(135deg,var(--now) 0 4px,transparent 4px 8px);opacity:.35;border-radius:4px 0 0 4px}
+.layer{position:absolute;top:84px;bottom:0;left:270px;right:0;pointer-events:none}
+.hol{position:absolute;top:0;bottom:0;background:var(--holiday)}
+.vline{position:absolute;top:0;bottom:0;border-left:1.5px dashed var(--muted)}
+.vlaunch{position:absolute;top:0;bottom:0;border-left:4px solid var(--launch)}
+.vtoday{position:absolute;top:-6px;bottom:0;border-left:2.5px solid var(--now);z-index:3}
+.legend{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:18px;font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{width:22px;height:14px;border-radius:4px;border:1.5px solid;display:inline-block}
+.track,.label,.group{position:relative;z-index:1}
+.track{background:transparent}
+</style>
+
+<div class="page">
+  <div class="status" id="status"></div>
+  <div class="scroll">
+    <div class="chart" id="chart">
+      <div class="label" style="border:none"></div>
+      <div class="axis" id="axis"></div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--blue-fill);border-color:var(--blue-stroke)"></i>BGH 流程图时效</span>
+    <span><i class="sw" style="background:var(--amber-fill);border-color:var(--amber-stroke)"></i>关键 / 易延误</span>
+    <span><i class="sw" style="background:var(--green-fill);border-color:var(--green-stroke);border-style:dashed"></i>余量</span>
+    <span><i class="sw" style="background:var(--holiday);border-color:var(--line)"></i>节假日 / 非工作日</span>
+    <span><i class="sw" style="background:var(--now);border-color:var(--now);width:4px;border-radius:1px"></i>今天</span>
+    <span><i class="sw" style="background:var(--now-bg);border-color:var(--now)"></i>当前应到节点</span>
+  </div>
+</div>
+
+<script>
+const D = s => { const [m,d] = s.split('/').map(Number); return new Date(m >= 6 ? 2026 : 2027, m-1, d); };
+const START = D('11/1'), END = D('1/23');
+const SPAN = (END - START) / 864e5;
+const pct = dt => ((dt - START) / 864e5) / SPAN * 100;
+const now = new Date(); const TODAY = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+const groups = [
+  ['Bundle：海运至乌拉圭 → 转运阿根廷', [
+    ['Bundle','11/6','11/6','11/6','blue'],
+    ['深圳仓重工','5 工作日 · 11/6–11/12','11/6','11/12','amber'],
+    ['订舱 · 装柜','11/12–11/13','11/12','11/13','blue'],
+    ['海运至乌拉圭','45 天 · 11/13–12/28','11/13','12/28','amber'],
+    ['乌拉圭 → 阿根廷','约 2 天 · 12/28–12/30','12/28','12/30','amber'],
+  ]],
+  ['手机：空运', [
+    ['BGH 下单 · 总部推单','D1 · 12/7','12/7','12/7','blue'],
+    ['深圳仓备货 · 重工','D1–D6 工作日 · 12/7–12/14','12/7','12/14','amber'],
+    ['订舱 · 拉至代理仓','D6 · 12/14','12/14','12/14','blue'],
+    ['空运 CIP EZE','192h · 12/15–12/22','12/15','12/22','blue'],
+    ['EZE 清关（绿/红通道）','3–5 工作日 · 12/23–12/30','12/23','12/30','amber'],
+  ]],
+  ['汇合：BGH → 门店', [
+    ['转运 BGH 仓','12/30','12/30','12/30','blue'],
+    ['下游建单 · OA 释放','理想 1 天 · 1/4','1/4','1/4','blue'],
+    ['BGH 拣货备货','1–2 工作日 · 1/4–1/5','1/4','1/5','blue'],
+    ['发货至下游仓','AMBA 当天 · 1/5','1/5','1/5','blue'],
+    ['下游派送至门店','4–5 工作日 · 1/6–1/12','1/6','1/12','amber'],
+    ['距首销余量','约 3 个工作日 · 1/13–1/17','1/13','1/17','green'],
+  ]],
+];
+
+const chart = document.getElementById('chart'), axis = document.getElementById('axis');
+['11/2','11/16','11/30','12/14','12/28','1/11'].forEach(t=>{
+  const e=document.createElement('div'); e.className='tick'; e.style.left=pct(D(t))+'%'; e.textContent=t; axis.append(e);});
+const flag=(cls,txt,dt)=>{const e=document.createElement('div');e.className='flag '+cls;e.style.left=pct(dt)+'%';e.textContent=txt;axis.append(e);};
+flag('','12/30 两线汇合',D('12/30')); flag('launch','1/18 首销',D('1/18'));
+const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+if (TODAY >= START && TODAY <= END) flag('today','今天 '+fmt(TODAY),TODAY);
+
+// statuses
+const all = groups.flatMap(g=>g[1]);
+const st = r => { const s=D(r[2]), e=D(r[3]); return TODAY > e ? 'done' : TODAY >= s ? 'now' : 'todo'; };
+const active = all.filter(r=>st(r)==='now');
+const nextStart = all.filter(r=>st(r)==='todo').map(r=>D(r[2])).sort((a,b)=>a-b)[0];
+const nexts = nextStart ? all.filter(r=>+D(r[2])===+nextStart) : [];
+
+groups.forEach(([title,rows])=>{
+  const g=document.createElement('div'); g.className='group'; g.textContent=title; chart.append(g);
+  rows.forEach(r=>{
+    const [name,desc,s,e,color]=r, S=D(s), E=D(e), status=st(r);
+    const lab=document.createElement('div'), tr=document.createElement('div');
+    lab.className='label'; tr.className='track';
+    let badge='';
+    if(status==='now'){const tot=Math.max(1,Math.round((E-S)/864e5)), day=Math.round((TODAY-S)/864e5)+1; badge=`<span class="badge now">进行中 ${day}/${tot} 天</span>`;}
+    else if(status==='done') badge='<span class="badge done">已完成</span>';
+    else if(nexts.includes(r)) badge='<span class="badge next">下一节点</span>';
+    lab.innerHTML=`<div class="n">${name}${badge}</div><div class="d">${desc}</div>`;
+    const b=document.createElement('div'); b.className='bar '+color;
+    const endX = new Date(+E+864e5);
+    b.style.left=pct(S)+'%'; b.style.width=Math.max(0,pct(endX)-pct(S))+'%';
+    if(status==='now'){const p=document.createElement('div');p.className='prog';p.style.width=((TODAY-S+864e5)/(endX-S)*100)+'%';b.append(p);}
+    tr.append(b);
+    const wrapCls = status==='now'?'row-now':status==='done'?'row-done':'';
+    lab.classList.add(...(wrapCls?[wrapCls]:[])); tr.classList.add(...(wrapCls?[wrapCls]:[]));
+    chart.append(lab,tr);
+  });
+});
+// row-* classes apply to cells directly
+const css=document.createElement('style');
+css.textContent='.label.row-now,.track.row-now{background:var(--now-bg)}.label.row-now{box-shadow:inset 4px 0 0 var(--now);padding-left:10px}.label.row-now .n{font-weight:700}.label.row-done .n{color:var(--muted)}.track.row-done .bar{opacity:.45}.track.row-now .bar{border-color:var(--now);border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--now) 25%,transparent)}';
+document.head.append(css);
+
+// overlay
+const layer=document.createElement('div'); layer.className='layer'; chart.append(layer);
+[['12/24','12/26'],['12/31','1/2']].forEach(([a,b])=>{const h=document.createElement('div');h.className='hol';h.style.left=pct(D(a))+'%';h.style.width=(pct(D(b))-pct(D(a)))+'%';layer.append(h);});
+const over=document.createElement('div'); over.className='layer'; over.style.zIndex=5; chart.append(over);
+const v=document.createElement('div');v.className='vline';v.style.left=pct(D('12/31'))+'%';over.append(v);
+const l=document.createElement('div');l.className='vlaunch';l.style.left=pct(D('1/18'))+'%';over.append(l);
+if (TODAY >= START && TODAY <= END){const t=document.createElement('div');t.className='vtoday';t.style.left=pct(new Date(+TODAY+432e5))+'%';over.append(t);}
+layer.style.zIndex=0;
+document.querySelectorAll('.track').forEach(t=>t.style.zIndex=2);
+
+// status banner
+const daysTo = Math.ceil((D('1/18')-TODAY)/864e5);
+const curTxt = active.length ? active.map(r=>{const S=D(r[2]),E=D(r[3]);return `<b>${r[0]}</b>（${r[2]}–${r[3]}，第 ${Math.round((TODAY-S)/864e5)+1}/${Math.max(1,Math.round((E-S)/864e5))} 天）`;}).join('、') : '<b>无进行中节点</b>';
+document.getElementById('status').innerHTML =
+  `<span>今天 <b>${fmt(TODAY)}</b></span><span>当前应到节点：${curTxt}</span>`+
+  (nexts.length?`<span class="sub">下一节点：${nexts.map(r=>r[0]).join('、')}（${fmt(nextStart)}，${Math.round((nextStart-TODAY)/864e5)} 天后）</span>`:'')+
+  `<span class="sub">距 1/18 首销 ${daysTo} 天</span>`;
+</script>
