@@ -6,7 +6,7 @@ price dashboard.
 
 ## Status: BLOCKED — network egress denied to all four target domains
 
-**Run log:** 2026-11-12 blocked · 2026-11-13 blocked · 2026-11-14 blocked · 2026-11-15 blocked · 2026-11-16 blocked again (all four hosts; WebFetch also fails DNS: proxy CONNECT → 403; see `data/source_check.jsonl`).
+**Run log:** 2026-11-12 blocked · 2026-11-13 blocked · 2026-11-14 blocked · 2026-11-15 blocked · 2026-11-16 blocked · 2026-11-17 blocked again (all four hosts; WebFetch also fails DNS: proxy CONNECT → 403; see `data/source_check.jsonl`).
 
 This session's outbound network policy rejects connections to every source required by the task:
 
