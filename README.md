@@ -43,3 +43,9 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+## Run log
+
+| Run date (UTC) | Result |
+|----------------|--------|
+| 2026-11-18 | Still blocked: all 4 hosts → proxy CONNECT 403 (curl) / ENOTFOUND (WebFetch). No data, no dashboard. |
