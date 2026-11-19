@@ -43,3 +43,10 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+### Run log
+
+| Date (UTC)  | Result |
+|-------------|--------|
+| 2026-11-18  | BLOCKED — all 4 domains denied (proxy CONNECT 403) |
+| 2026-11-19  | BLOCKED — all 4 domains still denied (curl: CONNECT 403; WebFetch: ENOTFOUND). No data, no dashboard. |
