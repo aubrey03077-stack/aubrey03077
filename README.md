@@ -43,3 +43,9 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+## Run log
+
+| Run date (UTC) | Frávega | OnCity | Personal | Claro | Result |
+|---|---|---|---|---|---|
+| 2026-11-20 | 403 待核实 | 403 待核实 | 403 待核实 | 403 待核实 | Blocked — proxy CONNECT 403 ("no rule or network setting allows this host"); WebFetch DNS ENOTFOUND. No data, no dashboard. |
