@@ -4,6 +4,10 @@ Automated daily pipeline that scrapes phone prices (Xiaomi, Samsung, Motorola, H
 main KA and carrier channels, tracks day-over-day price changes, and publishes an interactive HTML
 price dashboard.
 
+## Run log
+
+- 2026-11-22 (ART 09:00 run): all four sources still blocked — proxy CONNECT 403 "no rule or network setting allows this host"; WebFetch DNS ENOTFOUND. No price data collected; dashboard.html shows source self-check only. Blocked continuously since 2026-09-27.
+
 ## Status: BLOCKED — network egress denied to all four target domains
 
 This session's outbound network policy rejects connections to every source required by the task:
