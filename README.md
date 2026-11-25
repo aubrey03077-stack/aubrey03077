@@ -43,3 +43,10 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+## Run log
+
+| Run date (UTC) | Result |
+|----------------|--------|
+| 2026-09-27 | Blocked — all 4 hosts denied by egress policy |
+| 2026-11-25 | Blocked — still denied (curl CONNECT 403; WebFetch cannot resolve hosts). No data, no dashboard. |
