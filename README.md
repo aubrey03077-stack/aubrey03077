@@ -43,3 +43,10 @@ These weren't scaffolded with guessed CSS selectors in this run, since none of t
 actually be loaded to verify page structure — writing scrapers blind against unseen markup would
 just create broken code that looks done. They'll be written against real page structure as soon as
 egress is unblocked.
+
+## Run log
+
+| Run date (UTC) | Result |
+|----------------|--------|
+| 2026-11-24 | BLOCKED — all 4 domains denied by egress policy (curl CONNECT 403, WebFetch failed) |
+| 2026-11-26 | BLOCKED — same: curl CONNECT 403 on all 4; WebFetch ENOTFOUND (host not in allowed network domains) |
